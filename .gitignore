@@ -1,0 +1,9 @@
+node_modules/
+artifacts/
+test-results/
+playwright-report/
+.openai/
+*.tar.gz
+*.zip
+.DS_Store
+Thumbs.db

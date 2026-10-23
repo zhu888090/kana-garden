@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#406956"><meta name="description" content="每天一点点，轻松认识平假名与片假名。五十音表、记忆卡、测验与听音练习。">
+  <title>假名花园 · 每天一点日语</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css">
+  <script src="kana-data.js" defer></script><script src="learning.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳至学习内容</a>
+  <aside class="sidebar">
+    <a class="brand" href="#chart" aria-label="假名花园首页"><span class="brand-mark">か</span><span><strong>假名花园</strong><small>KANA GARDEN</small></span></a>
+    <div class="side-label">我的日语小天地</div>
+    <nav aria-label="主要导航" id="nav"></nav>
+    <div class="sidebar-bottom"><div class="daily-title"><span>今日的小目标</span><span id="goal-fraction">0 / 20</span></div><div class="progress-track"><span id="goal-bar"></span></div><p id="goal-message">每天 20 次练习，让记忆慢慢开花。</p><button class="side-link" data-action="view" data-view="progress"><span data-icon="chart"></span>学习进度 <span>↗</span></button><button class="side-link" data-action="view" data-view="about"><span data-icon="info"></span>关于与学习提示</button><div class="side-footer">一音一会，日积月累。<span>育てよう、ことばの芽。</span></div></div>
+  </aside>
+  <div class="page"><header class="topbar"><div class="breadcrumb">我的学习 <span>/</span> <strong id="crumb">五十音图</strong></div><div class="top-actions"><span class="streak"><span data-icon="sun"></span> <span id="streak-days">0</span> 天坚持</span><button class="avatar" aria-label="查看学习进度" data-action="view" data-view="progress">学</button></div></header>
+  <main id="main" tabindex="-1"></main><footer class="page-footer"><span>假名花园 <span class="footer-dot">·</span> 每天一点点，离日语更近一点。</span><span>はじめの一歩 🌱</span></footer></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="confirm-dialog"><h2>清空所有学习记录？</h2><p>当前浏览器的练习次数、记忆状态和错题都会清空。建议先导出一份备份。</p><div class="button-row"><button class="button secondary" data-action="cancel-reset">保留记录</button><button class="button danger" data-action="confirm-reset">确认清空</button></div></dialog>
+  <input type="file" id="import-file" accept="application/json,.json" hidden>
+</body></html>
