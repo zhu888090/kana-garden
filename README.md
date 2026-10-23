@@ -10,7 +10,7 @@
 
 轻量纯静态网页 · 电脑手机均可使用 · 学习进度保存在当前浏览器
 
-[下载单文件版](https://github.com/zhu888090/kana-garden/raw/refs/heads/main/%E5%81%87%E5%90%8D%E8%8A%B1%E5%9B%AD.html) · [开始使用](#开始使用) · [功能介绍](#功能介绍)
+[在线体验](https://zhu888090.github.io/kana-garden/) · [下载单文件版](https://github.com/zhu888090/kana-garden/raw/refs/heads/main/%E5%81%87%E5%90%8D%E8%8A%B1%E5%9B%AD.html) · [开始使用](#开始使用) · [功能介绍](#功能介绍)
 
 </div>
 
@@ -40,6 +40,10 @@
 每种文字收录 **104 个条目**：46 个清音（含拨音）、25 个浊音与半浊音、33 个常用拗音，两种文字共 **208 个条目**。
 
 ## 开始使用
+
+### 在线打开
+
+访问 **[假名花园在线版](https://zhu888090.github.io/kana-garden/)**，无需下载安装。支持电脑和手机浏览器。
 
 ### 下载后直接打开
 
