@@ -10,6 +10,8 @@
 
 新增 **动漫台词教室**：24 句常见表达，搭配原创剧情情境，一起学习假名、读音、意思和语气。
 
+新增 **动漫装扮**：芙莉莲花田与孤独摇滚放课后两套主题，搭配官方公开角色立绘、背景图片和可收起的学习挂件。
+
 轻量纯静态网页 · 电脑手机均可使用 · 学习进度保存在当前浏览器
 
 [在线体验](https://zhu888090.github.io/kana-garden/) · [下载单文件版](https://github.com/zhu888090/kana-garden/raw/refs/heads/main/%E5%81%87%E5%90%8D%E8%8A%B1%E5%9B%AD.html) · [开始使用](#开始使用) · [功能介绍](#功能介绍)
@@ -38,6 +40,7 @@
 | 间隔复习 | 根据连续记忆情况，在 1、3、7、14、30 天后安排页面内复习 |
 | 学习进度 | 查看练习次数、测验正确率、连续学习天数及掌握情况 |
 | 备份迁移 | 导出 / 导入 JSON 学习记录，方便更换设备 |
+| 动漫装扮 | 花田 / 放课后主题、角色挂件、背景开关、专注模式；外观偏好自动保存 |
 | 手机与键盘 | 响应式布局，支持键盘快捷键和减少动态效果设置 |
 
 每种文字收录 **104 个条目**：46 个清音（含拨音）、25 个浊音与半浊音、33 个常用拗音，两种文字共 **208 个条目**。
@@ -50,7 +53,7 @@
 
 ### 下载后直接打开
 
-下载仓库中的 [`假名花园.html`](https://github.com/zhu888090/kana-garden/raw/refs/heads/main/%E5%81%87%E5%90%8D%E8%8A%B1%E5%9B%AD.html)，用 Edge、Chrome、Safari 等现代浏览器打开即可。这个文件已包含全部样式与学习逻辑。
+下载仓库中的 [`假名花园.html`](https://github.com/zhu888090/kana-garden/raw/refs/heads/main/%E5%81%87%E5%90%8D%E8%8A%B1%E5%9B%AD.html)，用 Edge、Chrome、Safari 等现代浏览器打开即可。这个文件已包含全部样式、学习逻辑和动漫图片，打开后无需额外下载图片。
 
 直接以本地文件打开时，浏览器对进度保存的处理可能有所不同；移动或重命名文件也可能使原记录不可见。建议定期导出备份，或使用 HTTP 服务访问。
 
@@ -124,6 +127,9 @@ python -m http.server 8765 --bind 127.0.0.1 --directory dist
 dist/                  网站文件，可直接部署
   index.html           页面入口
   style.css            响应式样式
+  anime.css            动漫主题与装扮样式
+  appearance.js        外观偏好、挂件与主题切换
+  assets/              已压缩的角色立绘与动漫背景
   kana-data.js         假名与罗马音数据
   learning.js          判分、记忆状态与复习逻辑
   app.js               交互与页面渲染
@@ -160,3 +166,23 @@ node make-portable.cjs
 ## 相关项目
 
 制作前检索并阅读了 [Type Kana](https://github.com/furudean/type-kana)、[Kana Practice](https://github.com/davidbelesp/kana-practice) 和 [KanaQuiz](https://github.com/skywind3000/KanaQuiz)，参考了自选范围、随机测验与薄弱假名复习等学习方式。本程序独立编写，未复制这些项目的源码或素材。
+
+## 动漫主题与图片来源
+
+![孤独摇滚主题预览](docs/screenshots/bocchi.png)
+
+在页面上方切换「芙莉莲 · 花田」与「孤独摇滚 · 放课后」，通过「装扮」控制背景及角色立绘。点击「专注模式」可暂时隐藏图片与挂件；退出后恢复原有外观。切换主题不会中断正在进行的测验。外观保存在 `kana-garden-appearance-v1`，与学习记录分开。
+
+| 文件 | 内容与来源 |
+| --- | --- |
+| `dist/assets/frieren.webp` | 芙莉莲立绘，[官方角色页](https://frieren-anime.jp/character/chara_group1/1-1/)，原图 `https://frieren-anime.jp/wp-content/uploads/2023/08/chara01_full1.png` |
+| `dist/assets/frieren-flowers.webp` | 第 2 话花田剧照，[官方剧情页](https://frieren-anime.jp/story/1st/ep02/)，原图 `https://frieren-anime.jp/wp-content/uploads/2023/09/02_08.jpg` |
+| `dist/assets/bocchi.webp` | 后藤一里立绘，[Yamaha × 孤独摇滚！官方联动页](https://syncroom.yamaha.com/topics/2024/02.html)，原图 `https://syncroom.yamaha.com/assets/img/topics/2024/02/char-01.png` |
+| `dist/assets/bocchi-band.webp` | 结束乐队主视觉，[Crunchyroll 公开介绍](https://www.crunchyroll.com/ar/news/latest/2022/9/17/-bocchi-the-rock--) |
+
+图片仅为适配网页进行尺寸压缩、透明边距裁切与 WebP 转换。
+
+© 山田鐘人・アベツカサ／小学館／「葬送のフリーレン」製作委員会  
+© はまじあき／芳文社・アニプレックス
+
+图片与角色权利归各自权利人所有；本仓库不授予第三方动漫素材的再许可。本站为非官方学习项目。挂件中的寄语是原创学习提示，台词教室仍使用通用表达与原创情境，不冒充作品原句或角色配音。
