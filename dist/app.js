@@ -26,8 +26,9 @@
   };
   const I=name=>`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name]||iconPaths.leaf}</svg>`;
   document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=I(el.dataset.icon));
-  const navItems=[['chart','grid','五十音图'],['cards','cards','记忆卡片'],['quiz','pen','假名测验'],['listen','sound','听音练习'],['review','review','温故知新']];
-  const names={chart:'五十音图',cards:'记忆卡片',quiz:'假名测验',listen:'听音练习',review:'温故知新',progress:'学习进度',about:'关于与学习提示'};
+  const navItems=[['chart','grid','五十音图'],['cards','cards','记忆卡片'],['quiz','pen','假名测验'],['listen','sound','听音练习'],['dialogue','spark','台词教室'],['review','review','温故知新']];
+  const names={chart:'五十音图',cards:'记忆卡片',quiz:'假名测验',listen:'听音练习',dialogue:'动漫台词教室',review:'温故知新',progress:'学习进度',about:'关于与学习提示'};
+  const dialogue=KanaDialogue.create({getState:()=>state,save,render,speak,hasJapaneseVoice,toast,esc,I});
   const entry=id=>D.entries.find(e=>e.id===id);
   const allCards=()=>D.entries.flatMap(e=>['hira','kata'].map(script=>({...e,script})));
   const cardState=(e,script)=>state.cards[L.key(e,script)];
@@ -48,7 +49,7 @@
   }
   function intro(label,title,text){return `<div class="view-intro"><div class="eyebrow">${label}</div><h1>${title}</h1><p>${text}</p></div>`;}
   function warning(){return storageOK?'':'<div class="storage-warning">当前浏览器无法正常读取或保存学习记录。练习仍可继续，请在「学习进度」中导出备份。</div>';}
-  function summary(){const today=state.daily[L.dateKey()]||0;return `<div class="summary-strip"><div class="summary"><span class="summary-icon">${I('leaf')}</span><div><small>已掌握假名</small><strong>${mastered('hira')+mastered('kata')}<span>/ 208</span></strong></div></div><div class="summary"><span class="summary-icon">${I('sun')}</span><div><small>今日练习</small><strong>${today}<span>次</span></strong></div></div><div class="summary"><span class="summary-icon">${I('check')}</span><div><small>测验正确率</small><strong>${state.answers?Math.round(state.correct/state.answers*100):'—'}<span>${state.answers?'%':'待开始'}</span></strong></div></div><div class="summary"><span class="summary-icon">${I('review')}</span><div><small>错题与标记</small><strong>${wrongCards().length}<span>个待巩固</span></strong></div></div></div>`;}
+  function summary(){const today=state.daily[L.dateKey()]||0;return `<div class="summary-strip"><div class="summary"><span class="summary-icon">${I('leaf')}</span><div><small>已掌握假名</small><strong>${mastered('hira')+mastered('kata')}<span>/ 208</span></strong></div></div><div class="summary"><span class="summary-icon">${I('sun')}</span><div><small>今日练习</small><strong>${today}<span>次</span></strong></div></div><div class="summary"><span class="summary-icon">${I('check')}</span><div><small>假名正确率</small><strong>${state.answers?Math.round(state.correct/state.answers*100):'—'}<span>${state.answers?'%':'待开始'}</span></strong></div></div><div class="summary"><span class="summary-icon">${I('review')}</span><div><small>错题与标记</small><strong>${wrongCards().length}<span>个待巩固</span></strong></div></div></div>`;}
   function chart(){
     const list=D.entries.filter(e=>e.group===ui.group);let selected=entry(ui.selected);if(!selected||selected.group!==ui.group){selected=list[0];ui.selected=selected.id;}
     const rows=[...new Set(list.map(e=>e.row))];const columns=ui.group==='yoon'?['ya','yu','yo']:['a','i','u','e','o'];
@@ -117,14 +118,15 @@
   }
   function progress(){
     const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return {key:L.dateKey(d),label:`${d.getMonth()+1}/${d.getDate()}`};});
-    return intro('YOUR LITTLE ACHIEVEMENTS','看，你已经走了这么远。','每一次练习，都是记忆生长的痕迹。学习记录保存在当前浏览器，可导出备份。')+summary()+`<div class="progress-pair"><section class="panel"><h2>假名掌握情况</h2>${['hira','kata'].map(s=>`<div class="mastery-line"><span>${D.scripts[s]}</span><span>${mastered(s)} / 104</span></div><div class="progress-track"><span style="width:${mastered(s)/104*100}%"></span></div>${Object.keys(D.groups).map(g=>`<div class="mastery-line muted"><span>${D.groups[g]}</span><span>${mastered(s,g)} / ${D.entries.filter(e=>e.group===g).length}</span></div>`).join('')}`).join('')}<p class="muted" style="margin-top:20px">卡片自评「记住了」与测验答对均累计记忆次数；连续记对 3 次标记掌握，记错后重新累计。</p></section><section class="panel"><h2>最近 7 天</h2><p class="muted">包括记忆卡自评和测验答题，每次评价记录 1 次。</p><div class="heatmap">${days.map(d=>`<div class="day-square ${state.daily[d.key]?'done':''}" title="${d.key}: ${state.daily[d.key]||0} 次"><span>${d.label}</span><strong>${state.daily[d.key]||0}</strong></div>`).join('')}</div><div class="result-grid"><div><strong>${L.streakDays(state.daily)}</strong><span>连续学习天数</span></div><div><strong>${state.answers}</strong><span>累计测验题数</span></div></div><p class="muted">测验正确率只统计测验与听音题，不包含记忆卡自评。今日目标：20 次练习。</p></section></div><section class="panel data-actions"><h2>照顾好你的学习记录</h2><p class="muted">记录不会自动跨设备同步。清除浏览器数据会移除记录；可以导出 JSON，再在另一台设备导入。</p><div class="button-row"><button class="button secondary" data-action="export">${I('download')}导出备份</button><button class="button secondary" data-action="import">${I('upload')}导入备份</button><button class="button ghost" data-action="reset">清空记录</button></div><p class="muted">离线使用：在线打开一次后，支持的浏览器会缓存页面。语音是否离线可用取决于设备的日语语音包。</p></section>`;
+    return intro('YOUR LITTLE ACHIEVEMENTS','看，你已经走了这么远。','每一次练习，都是记忆生长的痕迹。学习记录保存在当前浏览器，可导出备份。')+summary()+`<div class="progress-pair"><section class="panel"><h2>假名掌握情况</h2>${['hira','kata'].map(s=>`<div class="mastery-line"><span>${D.scripts[s]}</span><span>${mastered(s)} / 104</span></div><div class="progress-track"><span style="width:${mastered(s)/104*100}%"></span></div>${Object.keys(D.groups).map(g=>`<div class="mastery-line muted"><span>${D.groups[g]}</span><span>${mastered(s,g)} / ${D.entries.filter(e=>e.group===g).length}</span></div>`).join('')}`).join('')}<p class="muted" style="margin-top:20px">卡片自评「记住了」与测验答对均累计记忆次数；连续记对 3 次标记掌握，记错后重新累计。</p></section><section class="panel"><h2>最近 7 天</h2><p class="muted">包括记忆卡、假名测验与台词小测，每次评价记录 1 次。</p><div class="heatmap">${days.map(d=>`<div class="day-square ${state.daily[d.key]?'done':''}" title="${d.key}: ${state.daily[d.key]||0} 次"><span>${d.label}</span><strong>${state.daily[d.key]||0}</strong></div>`).join('')}</div><div class="result-grid"><div><strong>${L.streakDays(state.daily)}</strong><span>连续学习天数</span></div><div><strong>${state.answers}</strong><span>累计测验题数</span></div></div><p class="muted">假名正确率只统计假名测验与听音题，不包含卡片自评；台词小测在「台词教室」中单独统计。今日目标：20 次练习。</p></section></div><section class="panel data-actions"><h2>照顾好你的学习记录</h2><p class="muted">记录不会自动跨设备同步。清除浏览器数据会移除记录；可以导出 JSON，再在另一台设备导入。</p><div class="button-row"><button class="button secondary" data-action="export">${I('download')}导出备份</button><button class="button secondary" data-action="import">${I('upload')}导入备份</button><button class="button ghost" data-action="reset">清空记录</button></div><p class="muted">离线使用：在线打开一次后，支持的浏览器会缓存页面。语音是否离线可用取决于设备的日语语音包。</p></section>`;
   }
   function about(){return intro('ABOUT THE GARDEN','从五十音，走向更大的世界。','一个简洁、安静的日语假名练习空间。')+`<article class="panel article"><h2>怎么开始？</h2><p>先在五十音图中认识一行假名，再用记忆卡回忆，最后完成 10 题小测验。可以按行筛选练习范围，也可以混合平假名与片假名。答错的假名会自动进入「温故知新」。</p><h2>发音与罗马音</h2><p>本程序包含每种文字的 46 个清音（含拨音 ん）、25 个浊音与半浊音，以及 33 个常用拗音。五十音图是传统名称，并不是 50 个不同的基础假名。较少见的「ぢゃ／ぢゅ／ぢょ」、外来语扩展组合和历史假名未收录。</p><p>默认显示常见的赫本式写法；输入题也接受 shi / si、chi / ti、tsu / tu、fu / hu、ji / zi 等常见替代写法。ぢ另接受 di，づ另接受 du。相同读音的假名不会同时作为反向题或听音题的干扰选项。</p><table><thead><tr><th>假名</th><th>学习提示</th></tr></thead><tbody><tr><td lang="ja">は・へ・を</td><td>作为助词时常读作 wa、e、o；字母识读题使用 ha、he、wo（を也接受 o）。</td></tr><tr><td lang="ja">じ / ぢ、ず / づ</td><td>在现代标准日语中通常同音，本表显示 ji、zu。</td></tr><tr><td lang="ja">きゃ・しゅ・ちょ</td><td>小写的ゃゅょ与前一个假名合读一拍，注意与大写やゆよ区分。</td></tr><tr><td lang="ja">っ / ッ、ー</td><td>小写っ表示促音，ー表示片假名词中的长音；本程序不把它们当作独立音节测试。</td></tr></tbody></table><h2>关于声音</h2><p>发音调用浏览器的 Speech Synthesis（日语语音），不包含录制的真人音频。设备必须有可用的日语语音。语音包缺失时，听音练习会提示安装，其他练习仍可使用。单字语音可能与自然语流中的音变或声调有所不同。</p><h2>GitHub 检索与参考</h2><p>制作前检索了下列公开项目，并参考「自选范围 → 随机测试 → 复习薄弱假名」的学习流程。本程序独立编写，未复制这些项目的源码或素材。</p><table><thead><tr><th>项目</th><th>相关功能</th></tr></thead><tbody><tr><td><a href="https://github.com/furudean/type-kana" target="_blank" rel="noopener noreferrer">Type Kana ↗</a></td><td>平假名、片假名输入测验；仓库提供在线版本链接。</td></tr><tr><td><a href="https://github.com/davidbelesp/kana-practice" target="_blank" rel="noopener noreferrer">Kana Practice ↗</a></td><td>假名图表、自选测验与学习进度。</td></tr><tr><td><a href="https://github.com/skywind3000/KanaQuiz" target="_blank" rel="noopener noreferrer">KanaQuiz ↗</a></td><td>Python 命令行速读测试与历史记录。</td></tr></tbody></table><p>已确认存在相关开源仓库；GitHub Releases 页面未能完整读取，因此不把源码仓库等同于已核验的安装包发布。</p><h2>你的学习记录</h2><p>练习数据使用浏览器 localStorage 保存，不发送给学习数据服务器。导入备份会替换当前记录。访问托管页面时仍适用托管平台自身的访问机制。关闭页面后不会主动发送复习通知。</p><div class="button-row"><button class="button" data-action="view" data-view="chart">回到五十音图 ${I('arrow')}</button><button class="button secondary" data-action="view" data-view="progress">管理学习记录</button></div></article>`;}
-  function render(){updateShell();const current=view();$('#main').innerHTML=warning()+(session&&session.origin===current?sessionView():current==='chart'?chart():['cards','quiz','listen'].includes(current)?setup(current):current==='review'?review():current==='progress'?progress():about());if(session&&!session.done&&!session.answered&&session.mode==='typing')setTimeout(()=>$('#typing-answer')?.focus({preventScroll:true}),0);}
-  function navigate(target){if(!names[target])return;session=null;if('speechSynthesis' in window)speechSynthesis.cancel();if(location.hash===`#${target}`)render();else location.hash=target;window.scrollTo({top:0,behavior:'instant'});}
+  function render(){updateShell();const current=view();$('#main').innerHTML=warning()+(session&&session.origin===current?sessionView():current==='chart'?chart():current==='dialogue'?dialogue.render():['cards','quiz','listen'].includes(current)?setup(current):current==='review'?review():current==='progress'?progress():about());if(session&&!session.done&&!session.answered&&session.mode==='typing')setTimeout(()=>$('#typing-answer')?.focus({preventScroll:true}),0);}
+  function navigate(target){if(!names[target])return;session=null;dialogue.leave();if('speechSynthesis' in window)speechSynthesis.cancel();if(location.hash===`#${target}`)render();else location.hash=target;window.scrollTo({top:0,behavior:'instant'});}
   function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`kana-garden-${L.dateKey()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习记录已导出。');}
   document.addEventListener('click',event=>{
     const b=event.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action;
+    if(dialogue.handle(a,b))return;
     if(a==='view')navigate(b.dataset.view);
     else if(a==='script'){ui.script=b.dataset.script;render();}
     else if(a==='group'){ui.group=b.dataset.group;render();}
@@ -153,6 +155,7 @@
   });
   document.addEventListener('change',async event=>{
     const el=event.target;
+    if(dialogue.change(el))return;
     if(el.id==='show-romaji'){ui.showRomaji=el.checked;render();}
     else if(el.name==='setting-group'){ui.settings.groups=[...document.querySelectorAll('input[name="setting-group"]:checked')].map(i=>i.value);ui.settings.row='all';render();}
     else if(el.id.startsWith('setting-')){const name=el.id.slice(8);if(Object.hasOwn(ui.settings,name))ui.settings[name]=el.value;}
@@ -166,6 +169,7 @@
   });
   document.addEventListener('submit',event=>{if(event.target.id==='typing-form'){event.preventDefault();answer($('#typing-answer').value);}});
   document.addEventListener('keydown',event=>{
+    if(view()==='dialogue'){dialogue.keydown(event);return;}
     if(!session||session.done||event.ctrlKey||event.altKey||event.metaKey||$('#confirm-dialog').open)return;
     if(/^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName))return;
     if(event.key==='Enter'&&session.answered){event.preventDefault();nextQuestion();}
@@ -173,7 +177,7 @@
     else if(session.kind==='cards'&&session.flipped&&['1','2'].includes(event.key)){event.preventDefault();rate(event.key==='2');}
     else if(session.kind!=='cards'&&session.mode!=='typing'&&!session.answered&&/^[1-4]$/.test(event.key)){event.preventDefault();const option=session.options[Number(event.key)-1];if(option)answer(option);}
   });
-  window.addEventListener('hashchange',()=>{session=null;render();});
+  window.addEventListener('hashchange',()=>{session=null;dialogue.leave();render();});
   if('speechSynthesis' in window)speechSynthesis.addEventListener('voiceschanged',()=>{const status=$('#voice-status');if(status)status.textContent=hasJapaneseVoice()?'已检测到日语语音，准备好就开始吧。':'未检测到日语语音。请安装系统日语语音包后刷新；其他练习仍可使用。';});
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('./sw.js').catch(()=>{});
   render();

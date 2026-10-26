@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '24'
       - name: Verify learning data and logic
-        run: node --test tests/learning.test.cjs
+        run: node --test tests/learning.test.cjs tests/dialogue.test.cjs
       - name: Check app syntax
         run: node --check dist/app.js
       - name: Configure Pages

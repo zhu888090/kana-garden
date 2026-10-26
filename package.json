@@ -1,10 +1,10 @@
 {
   "name": "kana-garden",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "假名花园：中文界面的平假名、片假名学习网页，支持记忆卡、测验、听音与错题复习。",
   "scripts": {
-    "test": "node --test tests/learning.test.cjs",
+    "test": "node --test tests/learning.test.cjs tests/dialogue.test.cjs",
     "test:browser": "node tests/browser.cjs",
     "portable": "node make-portable.cjs"
   },
