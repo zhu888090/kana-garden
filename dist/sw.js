@@ -1,5 +1,5 @@
-const CACHE='kana-garden-v3-anime';
-const FILES=['./','./index.html','./style.css','./anime.css','./appearance.js','./assets/frieren.webp','./assets/frieren-flowers.webp','./assets/bocchi.webp','./assets/bocchi-band.webp','./kana-data.js','./dialogue-data.js','./learning.js','./dialogue.js','./app.js','./icon.svg','./manifest.webmanifest'];
+const CACHE='kana-garden-v4-languages';
+const FILES=['./','./index.html','./style.css','./anime.css','./i18n.css','./locales.js','./i18n.js','./appearance.js','./assets/frieren.webp','./assets/frieren-flowers.webp','./assets/bocchi.webp','./assets/bocchi-band.webp','./kana-data.js','./dialogue-data.js','./learning.js','./dialogue.js','./app.js','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('kana-garden-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}return response;}).catch(()=>caches.match(event.request).then(cached=>cached||(event.request.mode==='navigate'?caches.match('./index.html'):Response.error()))));});

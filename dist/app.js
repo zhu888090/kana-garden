@@ -162,7 +162,7 @@
     else if(el.id==='import-file'&&el.files[0]){
       const file=el.files[0];if(file.size>2*1024*1024){toast('备份文件过大，请选择本程序导出的 JSON 文件。');return;}
       try{const data=JSON.parse(await file.text());const keys=new Set(allCards().map(e=>L.key(e,e.script)));if(!L.valid(data)||Object.keys(data.cards).some(k=>!keys.has(k))||Object.keys(data.daily).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k)))throw new Error('invalid');
-        if(!window.confirm('导入备份会替换当前浏览器的学习记录，是否继续？'))return;
+        if(!window.confirm(KanaI18n.translate('导入备份会替换当前浏览器的学习记录，是否继续？')))return;
         state=data;save();render();toast('备份已导入，可以继续学习了。');
       }catch{toast('无法读取这个备份，请选择假名花园导出的有效 JSON 文件。');}
     }

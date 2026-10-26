@@ -1,10 +1,10 @@
 {
   "name": "kana-garden",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
-  "description": "假名花园：中文界面的平假名、片假名学习网页，支持记忆卡、测验、听音与错题复习。",
+  "description": "Anime-inspired Japanese learning with Frieren and Bocchi themes, kana practice and 24 dialogue lessons. 中文 / English / 한국어.",
   "scripts": {
-    "test": "node --test tests/learning.test.cjs tests/dialogue.test.cjs",
+    "test": "node --test tests/learning.test.cjs tests/dialogue.test.cjs tests/i18n.test.cjs",
     "test:browser": "node tests/browser.cjs",
     "portable": "node make-portable.cjs"
   },
