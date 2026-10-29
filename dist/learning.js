@@ -18,10 +18,17 @@
     return c;
   }
   function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-  function choices(current,pool,mode,script){
+  function choices(current,pool,mode,script,extra){
     const label=e=>mode==='reverse'||mode==='listen'?e[script]:e.romaji;
-    const target=label(current);const eligible=mode==='reverse'||mode==='listen'?pool.filter(e=>!e.accepted.some(a=>current.accepted.includes(a))):pool;
-    const alternatives=[...new Set(eligible.map(label))].filter(x=>x!==target);
+    const target=label(current);
+    const sameSound=e=>current.accepted.some(a=>e.accepted.includes(a));
+    const usable=mode==='reverse'||mode==='listen'?e=>!sameSound(e):()=>true;
+    const pick=list=>[...new Set(list.filter(usable).map(label))].filter(x=>x!==target);
+    const alternatives=pick(pool);
+    if(alternatives.length<3){
+      const more=pick(extra||[]).filter(x=>!alternatives.includes(x));
+      alternatives.push(...more);
+    }
     return shuffle([target,...shuffle(alternatives).slice(0,3)]);
   }
   function streakDays(daily,now=new Date()){

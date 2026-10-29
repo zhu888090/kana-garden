@@ -50,3 +50,30 @@ test('backup validation rejects corrupt progress',()=>{
   assert.ok(L.valid(L.fresh()));assert.ok(!L.valid({version:1,cards:{},daily:{},answers:-1,correct:2}));
   const s=L.fresh();s.cards['hira:x']={streak:-3,wrong:0,review:false,due:0};assert.ok(!L.valid(s));
 });
+test('review pools smaller than four still offer four choices',()=>{
+  const all=D.entries.flatMap(e=>['hira','kata'].map(s=>({...e,script:s})));
+  for(const n of [1,2,3])for(const script of ['hira','kata'])for(const mode of ['recognition','reverse','listen']){
+    const current=all.find(e=>e.script===script);
+    const pool=[current,...all.filter(e=>e.script===script&&e.id!==current.id).slice(0,n-1)];
+    const options=L.choices(current,pool,mode,script,D.entries);
+    assert.equal(options.length,4,`${mode} pool=${n}`);
+    assert.equal(new Set(options).size,4);
+    const expected=mode==='recognition'?current.romaji:current[script];
+    assert.ok(options.includes(expected));
+    for(const o of options.filter(o=>o!==expected)){
+      const other=all.find(d=>d.script===script&&d[mode==='recognition'?'romaji':script]===o);
+      assert.ok(!other||!other.accepted.some(a=>current.accepted.includes(a)),`${current.hira} vs ${o}`);
+    }
+  }
+});
+test('extra distractors preserve complete row pools and exclude same-sound kana',()=>{
+  for(const mode of ['recognition','reverse','listen'])for(const script of ['hira','kata']){
+    const pool=D.entries.filter(e=>e.row==='a'&&e.group==='basic');
+    for(let i=0;i<20;i++)for(const option of L.choices(pool[0],pool,mode,script,D.entries))assert.ok(pool.some(e=>e[mode==='recognition'?'romaji':script]===option));
+    if(mode==='recognition')continue;
+    for(const current of D.entries)for(const option of L.choices(current,[current],mode,script,D.entries).filter(o=>o!==current[script])){
+      const other=D.entries.find(e=>e[script]===option);
+      assert.ok(!other.accepted.some(a=>current.accepted.includes(a)),`${current.hira} vs ${option}`);
+    }
+  }
+});
