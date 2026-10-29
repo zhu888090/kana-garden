@@ -77,3 +77,60 @@ test('extra distractors preserve complete row pools and exclude same-sound kana'
     }
   }
 });
+
+function appHarness(raw,{failCorruptBackup=false}={}){
+ const vm=require('node:vm'),fs=require('node:fs');
+ const store=new Map(raw===undefined?[]:[['kana-garden-progress-v1',raw]]),nodes=new Map(),handlers={};let app,confirms=0;
+ const document={activeElement:null,querySelectorAll:()=>[],addEventListener:(name,fn)=>{handlers[name]=fn;}};
+ document.querySelector=selector=>{
+  if(selector==='dialog[open]')return null;
+  if(!nodes.has(selector))nodes.set(selector,{innerHTML:'',textContent:'',style:{},dataset:{},classList:{add(){},remove(){}},querySelectorAll:()=>[],focus(){document.activeElement=this;}});
+  return nodes.get(selector);
+ };
+ document.activeElement=document.querySelector('body');
+ const context={KanaData:D,KanaLearning:L,KanaDialogueData:require('../dist/dialogue-data.js'),
+  KanaDialogue:{create:config=>{app=config;return {render:()=>'',change:()=>false,handle:()=>false,leave(){},keydown(){}};}},
+  KanaAppearance:{refresh(){},credits:()=>''},KanaI18n:{translate:s=>s},document,
+  localStorage:{getItem:key=>store.get(key)??null,setItem:(key,value)=>{if(failCorruptBackup&&key.endsWith('-corrupt'))throw Error('quota');store.set(key,value);}},
+  window:{addEventListener(){},scrollTo(){},confirm:()=>{confirms++;return true;}},location:{hash:'#progress',protocol:'file:'},navigator:{},setTimeout:()=>1,clearTimeout(){}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../dist/app.js'),'utf8'),context,{filename:'dist/app.js'});
+ return {store,nodes,get state(){return app.getState();},get confirms(){return confirms;},
+  import:async data=>handlers.change({target:{id:'import-file',files:[{size:100,text:async()=>JSON.stringify(data)}]}})};
+}
+test('backup import rejects unknown dialogue IDs before changing current progress',async()=>{
+ const current=L.fresh();L.record(current,L.key(D.entries[0],'hira'),true);
+ const raw=JSON.stringify(current);
+ for(const target of ['learned','records','both']){
+  const h=appHarness(raw),data=L.fresh();
+  if(target!=='records')data.dialogue.learned=['nope'];
+  if(target!=='learned')data.dialogue.records.nope={attempts:1,correct:1,review:true};
+  await h.import(data);
+  assert.match(h.nodes.get('#toast').textContent,/无法读取这个备份/);
+  assert.equal(h.store.get('kana-garden-progress-v1'),raw);
+  assert.equal(JSON.stringify(h.state),raw);
+  assert.equal(h.confirms,0);
+ }
+});
+test('backup import still accepts known dialogue IDs and old kana-only backups',async()=>{
+ for(const old of [false,true]){
+  const h=appHarness(),data=L.fresh();
+  if(old)delete data.dialogue;
+  else {data.dialogue.learned=['ohayou'];data.dialogue.records.ohayou={attempts:1,correct:1,review:false};}
+  await h.import(data);
+  assert.equal(h.confirms,1);
+  assert.equal(h.store.get('kana-garden-progress-v1'),JSON.stringify(data));
+  assert.match(h.nodes.get('#toast').textContent,/备份已导入/);
+ }
+});
+test('corrupt saved progress keeps the original raw content and shows a warning',()=>{
+ for(const raw of ['{oops','null',JSON.stringify({version:9})]){
+  const h=appHarness(raw);
+  assert.equal(h.store.get('kana-garden-progress-v1-corrupt'),raw);
+  assert.equal(h.store.get('kana-garden-progress-v1'),raw);
+  assert.equal(JSON.stringify(h.state),JSON.stringify(L.fresh()));
+  assert.match(h.nodes.get('#main').innerHTML,/storage-warning/);
+ }
+ const h=appHarness('{oops',{failCorruptBackup:true});
+ assert.equal(h.store.get('kana-garden-progress-v1'),'{oops');
+ assert.match(h.nodes.get('#main').innerHTML,/storage-warning/);
+});

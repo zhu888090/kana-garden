@@ -29,6 +29,8 @@ jobs:
         run: node --test tests/learning.test.cjs tests/dialogue.test.cjs tests/i18n.test.cjs
       - name: Check app syntax
         run: node --check dist/app.js && node --check dist/appearance.js && node --check dist/i18n.js && node --check dist/locales.js
+      - name: Verify portable build is current
+        run: node make-portable.cjs && git diff --exit-code -- 假名花园.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload static site

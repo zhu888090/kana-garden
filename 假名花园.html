@@ -695,11 +695,12 @@ zettainimakenai|I absolutely won't lose!|Before the final match, the hero clench
  const M=root.KanaLocales.messages,valid=code=>root.KanaLocales.languages.includes(code),KEY='kana-garden-language-v1';
  let locale='zh';
  const pick=(en,ko,code)=>code==='ko'?ko:en;
+ const KO_SPACELESS=new Set(['天坚持','句常用表达','句已标熟悉','句待复习','秒']);
  const patterns=[
   [/^答对了！(.+)$/,(m,c)=>pick(`Correct! ${m[1]}`,`정답! ${m[1]}`,c)],
-  [/^再记一次：(.+)。已加入复习。$/,(m,c)=>pick(`Remember: ${m[1]}. Added to review.`,`다시 기억해요: ${m[1]}. 복습에 추가했어요.`,c)],
-  [/^再记一遍：(.+)。已加入台词「待复习」。$/,(m,c)=>pick(`Remember: ${translate(m[1],c)} Added to dialogue review.`,`다시 기억해요: ${translate(m[1],c)} 대사 복습에 추가했어요.`,c)],
-  [/^当前范围 (\d+) 句，每轮最多 10 题。答错的台词会收进「待复习」。$/,(m,c)=>pick(`${m[1]} lines selected. Up to 10 questions per round. Mistakes are saved for review.`,`${m[1]}개 대사를 선택했어요. 한 라운드는 최대 10문제이며 오답은 복습 목록에 저장돼요.`,c)],
+  [/^再记一次：(.+)。已加入复习。$/,(m,c)=>pick(`Not quite: ${m[1]}. Added to review.`,`다시 기억해요: ${m[1]}. 복습에 추가했어요.`,c)],
+  [/^再记一遍：(.+)。已加入台词「待复习」。$/,(m,c)=>pick(`Not quite: ${translate(m[1],c)} Added to dialogue review.`,`다시 기억해요: ${translate(m[1],c)} 대사 복습에 추가했어요.`,c)],
+  [/^当前范围 (\d+) 句，每轮最多 10 题。答错的台词会收进「待复习」。$/,(m,c)=>pick(`${m[1]} ${m[1]==='1'?'line':'lines'} selected. Up to 10 questions per round. Mistakes are saved for review.`,`${m[1]}개 대사를 선택했어요. 한 라운드는 최대 10문제이며 오답은 복습 목록에 저장돼요.`,c)],
   [/^(\d+) \/ (\d+) 题答对 · 台词小测单独统计$/,(m,c)=>pick(`${m[1]} / ${m[2]} correct · Dialogue scores are tracked separately`,`${m[1]} / ${m[2]} 정답 · 대사 점수는 따로 집계해요`,c)],
   [/^(.+) · 连续记对 (\d+) 次$/,(m,c)=>pick(`${translate(m[1],c)} · ${m[2]} correct in a row`,`${translate(m[1],c)} · ${m[2]}회 연속 정답`,c)],
   [/^(.+) 在这里读 (.+?)。(.+)$/,(m,c)=>pick(`${m[1]} is read ${m[2]} here. ${translate(m[3],c)}`,`여기서 ${m[1]}는 ${m[2]}로 읽어요. ${translate(m[3],c)}`,c)],
@@ -711,7 +712,7 @@ zettainimakenai|I absolutely won't lose!|Before the final match, the hero clench
   [/^(\d+) 个$/,(m,c)=>pick(`${m[1]} items`,`${m[1]}개`,c)],
   [/^([a-z]+) 行$/,(m,c)=>pick(`${m[1]} row`,`${m[1]}행`,c)],
   [/^(.+) · (.+) (\d+) 音$/,(m,c)=>pick(`${translate(m[1],c)} · ${translate(m[2],c)} · ${m[3]} sounds`,`${translate(m[1],c)} · ${translate(m[2],c)} · ${m[3]}음`,c)],
-  [/^(\d{4}-\d{2}-\d{2}): (\d+) 次$/,(m,c)=>pick(`${m[1]}: ${m[2]} practices`,`${m[1]}: ${m[2]}회`,c)]
+  [/^(\d{4}-\d{2}-\d{2}): (\d+) 次$/,(m,c)=>pick(`${m[1]}: ${m[2]} ${m[2]==='1'?'practice':'practices'}`,`${m[1]}: ${m[2]}회`,c)]
  ];
  const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
  // Longest phrases first; single-character word meanings are exact matches only.
@@ -719,7 +720,8 @@ zettainimakenai|I absolutely won't lose!|Before the final match, the hero clench
  function translate(value,code=locale){
   const source=String(value);if(!valid(code)||code==='zh')return source;
   const body=source.trim();if(!body)return source;
-  const lead=source.slice(0,source.indexOf(body)),tail=source.slice(source.indexOf(body)+body.length);
+  const leadRaw=source.slice(0,source.indexOf(body)),tail=source.slice(source.indexOf(body)+body.length);
+  const lead=code==='ko'&&KO_SPACELESS.has(body)?leadRaw.replace(/\s+$/,''):leadRaw;
   let result=M[body]?.[code];
   if(result===undefined){for(const [re,format] of patterns){const m=body.match(re);if(m){result=format(m,code);break;}}}
   if(result===undefined)result=body.replace(fragments,key=>M[key][code]);
@@ -818,7 +820,7 @@ zettainimakenai|I absolutely won't lose!|Before the final match, the hero clench
   const $=s=>document.querySelector(s);
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let state=L.fresh(),storageOK=true,session=null,toastTimer;
-  try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);if(L.valid(parsed))state=parsed;else storageOK=false;}}catch{storageOK=false;}
+  try{const raw=localStorage.getItem(STORE);if(raw){let parsed=null;try{parsed=JSON.parse(raw);}catch{}if(parsed&&L.valid(parsed))state=parsed;else{try{localStorage.setItem(STORE+'-corrupt',raw);}catch{}storageOK=false;}}}catch{storageOK=false;}
   const ui={script:'hira',group:'basic',selected:'basic-a-0',showRomaji:true,reviewFilter:'wrong',settings:{script:'hira',groups:['basic'],row:'all',count:'20',mode:'recognition'}};
   const iconPaths={
     grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -974,7 +976,7 @@ zettainimakenai|I absolutely won't lose!|Before the final match, the hero clench
     else if(el.id.startsWith('setting-')){const name=el.id.slice(8);if(Object.hasOwn(ui.settings,name))ui.settings[name]=el.value;}
     else if(el.id==='import-file'&&el.files[0]){
       const file=el.files[0];if(file.size>2*1024*1024){toast('备份文件过大，请选择本程序导出的 JSON 文件。');return;}
-      try{const data=JSON.parse(await file.text());const keys=new Set(allCards().map(e=>L.key(e,e.script)));if(!L.valid(data)||Object.keys(data.cards).some(k=>!keys.has(k))||Object.keys(data.daily).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k)))throw new Error('invalid');
+      try{const data=JSON.parse(await file.text());const keys=new Set(allCards().map(e=>L.key(e,e.script)));if(!L.valid(data)||Object.keys(data.cards).some(k=>!keys.has(k))||Object.keys(data.daily).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k))||(data.dialogue?.learned||[]).some(id=>!KanaDialogueData.lines.some(l=>l.id===id))||Object.keys(data.dialogue?.records||{}).some(id=>!KanaDialogueData.lines.some(l=>l.id===id)))throw new Error('invalid');
         if(!window.confirm(KanaI18n.translate('导入备份会替换当前浏览器的学习记录，是否继续？')))return;
         state=data;save();render();toast('备份已导入，可以继续学习了。');
       }catch{toast('无法读取这个备份，请选择假名花园导出的有效 JSON 文件。');}

@@ -36,3 +36,25 @@ test('switching language never modifies lesson identifiers, answers or kana data
  I.setLocale('zh');assert.equal(I.translate('早上好！'),'早上好！');
  assert.equal(JSON.stringify({K,D}),before);
 });
+
+test('Korean counters remove only their leading unit space',()=>{
+ assert.equal(I.translate(' 天坚持','ko'),'일 연속 학습');
+ assert.equal(I.translate(' 天坚持','en'),' day streak');
+ assert.equal(I.translate(' 句常用表达','ko'),'가지 일상 표현');
+ assert.equal(I.translate(' 句已标熟悉','ko'),'개 익숙한 대사');
+ assert.equal(I.translate(' 句待复习','ko'),'개 복습할 대사');
+ assert.equal(I.translate(' 秒','ko'),'초');
+ assert.equal(I.translate(' · ','ko'),' · ');
+ assert.equal(I.translate(' 天坚持 ','ko'),'일 연속 학습 ');
+});
+test('incorrect English feedback keeps dialogue punctuation and Korean wording',()=>{
+ assert.equal(I.translate('再记一次：あ → a / i。已加入复习。','en'),'Not quite: あ → a / i. Added to review.');
+ assert.equal(I.translate('再记一遍：早上好！。已加入台词「待复习」。','en'),'Not quite: Good morning! Added to dialogue review.');
+ assert.equal(I.translate('再记一遍：早上好！。已加入台词「待复习」。','ko'),'다시 기억해요: 좋은 아침! 대사 복습에 추가했어요.');
+});
+test('English range and calendar counters use singular only for one',()=>{
+ for(const [n,word] of [[0,'lines'],[1,'line'],[2,'lines']])assert.ok(I.translate('当前范围 '+n+' 句，每轮最多 10 题。答错的台词会收进「待复习」。','en').startsWith(n+' '+word+' selected.'));
+ assert.equal(I.translate('2026-10-29: 1 次','en'),'2026-10-29: 1 practice');
+ assert.equal(I.translate('2026-10-29: 2 次','en'),'2026-10-29: 2 practices');
+ assert.equal(I.translate('2026-10-29: 0 次','en'),'2026-10-29: 0 practices');
+});

@@ -5,7 +5,7 @@
   const $=s=>document.querySelector(s);
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let state=L.fresh(),storageOK=true,session=null,toastTimer;
-  try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);if(L.valid(parsed))state=parsed;else storageOK=false;}}catch{storageOK=false;}
+  try{const raw=localStorage.getItem(STORE);if(raw){let parsed=null;try{parsed=JSON.parse(raw);}catch{}if(parsed&&L.valid(parsed))state=parsed;else{try{localStorage.setItem(STORE+'-corrupt',raw);}catch{}storageOK=false;}}}catch{storageOK=false;}
   const ui={script:'hira',group:'basic',selected:'basic-a-0',showRomaji:true,reviewFilter:'wrong',settings:{script:'hira',groups:['basic'],row:'all',count:'20',mode:'recognition'}};
   const iconPaths={
     grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -161,7 +161,7 @@
     else if(el.id.startsWith('setting-')){const name=el.id.slice(8);if(Object.hasOwn(ui.settings,name))ui.settings[name]=el.value;}
     else if(el.id==='import-file'&&el.files[0]){
       const file=el.files[0];if(file.size>2*1024*1024){toast('备份文件过大，请选择本程序导出的 JSON 文件。');return;}
-      try{const data=JSON.parse(await file.text());const keys=new Set(allCards().map(e=>L.key(e,e.script)));if(!L.valid(data)||Object.keys(data.cards).some(k=>!keys.has(k))||Object.keys(data.daily).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k)))throw new Error('invalid');
+      try{const data=JSON.parse(await file.text());const keys=new Set(allCards().map(e=>L.key(e,e.script)));if(!L.valid(data)||Object.keys(data.cards).some(k=>!keys.has(k))||Object.keys(data.daily).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k))||(data.dialogue?.learned||[]).some(id=>!KanaDialogueData.lines.some(l=>l.id===id))||Object.keys(data.dialogue?.records||{}).some(id=>!KanaDialogueData.lines.some(l=>l.id===id)))throw new Error('invalid');
         if(!window.confirm(KanaI18n.translate('导入备份会替换当前浏览器的学习记录，是否继续？')))return;
         state=data;save();render();toast('备份已导入，可以继续学习了。');
       }catch{toast('无法读取这个备份，请选择假名花园导出的有效 JSON 文件。');}
